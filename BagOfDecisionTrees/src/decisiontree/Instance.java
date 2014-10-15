@@ -1,10 +1,11 @@
 package decisiontree;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Instance {
+public class Instance implements Serializable {
     private Map<String, Double> values;
     private String classifier;
 

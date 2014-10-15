@@ -1,12 +1,13 @@
 package decisiontree;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Attribute {
+public class Attribute implements Serializable {
     private int index;
     private String name;
     private Set<Double> values;

@@ -71,6 +71,10 @@ public class DecisionTree {
         }
     }
     
+    public Id3 getBestTrainter(){
+    	return trainer[selected];
+    }
+    
     /**
      * Print results
      */

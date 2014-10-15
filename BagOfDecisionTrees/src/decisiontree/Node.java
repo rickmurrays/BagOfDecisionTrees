@@ -1,10 +1,11 @@
 package decisiontree;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Node {
+public class Node implements Serializable{
 	private ArrayList<Node> children;
 	private Node parent;
 	private boolean binary;

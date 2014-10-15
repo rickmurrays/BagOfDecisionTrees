@@ -1,9 +1,10 @@
 package decisiontree;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Id3Node extends Node {
+public class Id3Node extends Node implements Serializable {
     private List<String> attributesTested;
     private Instances instances;
     private String classifier;
@@ -12,6 +13,8 @@ public class Id3Node extends Node {
     private double value;
     private double purity;
     private double entropy;
+
+    
 
     /**
      * Constructor for root node
