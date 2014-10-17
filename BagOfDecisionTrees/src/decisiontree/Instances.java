@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,17 +56,8 @@ public class Instances implements Serializable {
      * @param values
      * @param classifier 
      */
-    private void add(String[] names, Double[] values, String classifier){
+    private void add(String[] names, String[] values, String classifier){
         instances.add(new Instance(names, values, classifier));
-    }
-    
-    /**
-     * Add instance to the linked list given a map of names and values
-     * @param attributes
-     * @param classifier 
-     */
-    private void add(Map<String, Double> attributes, String classifier){
-        instances.add(new Instance(attributes, classifier));
     }
     
     /**
@@ -116,12 +106,26 @@ public class Instances implements Serializable {
      * Getter method for the set of values of a specific attribute
      * on all instances
      * @param name
-     * @return 
+     * @return set of string values
      */
-    public Set<Double> values(String name){
-        Set<Double> values = new LinkedHashSet<Double>();
+    public Set<String> values(String name){
+        Set<String> values = new LinkedHashSet<String>();
         for(Instance instance: instances){
             values.add(instance.value(name));
+        }
+        return values;
+    }
+    
+    /**
+     * Getter method for the set of values of a specific attribute
+     * on all instances
+     * @param name
+     * @return set of double values
+     */
+    public Set<Double> valuesDouble(String name){
+        Set<Double> values = new LinkedHashSet<Double>();
+        for(Instance instance: instances){
+            values.add(instance.valueDouble(name));
         }
         return values;
     }
@@ -205,6 +209,60 @@ public class Instances implements Serializable {
     }
     
     /**
+     * Compute attribute value counts for the set of instances and
+     * a given attribute
+     * @param attribute
+     * @return map of attribute names and their counts
+     */
+    public Map<String, Integer> attributeValueCounts(String attribute) {
+        // check if attribute name exists
+        if(!attributes.containsKey(attribute)) {
+            log.info("Unable to determine attribute counts, attribute " + attribute + " not found");
+            return null;
+        }
+        // get attribute values
+        Set<String> values = attributes.get(attribute).values();
+        // initialize counters for values
+        Map<String, Integer> counts = new HashMap<String, Integer>();
+        for(String value: values) {
+            counts.put(value, 0);
+        }
+        // count values for all instances
+        for(Instance instance: instances()) {
+            String value = instance.value(attribute);
+            counts.put(value, counts.get(value) + 1);
+        }
+        return counts;
+    }
+    
+    /**
+     * Compute the majority attribute value for the set of instances and
+     * a given attribute
+     * @param attribute
+     * @return 
+     */
+    public String majorityAttributeValue(String attribute) {
+        // check if attribute name exists
+        if(!attributes.containsKey(attribute)) {
+            log.info("Unable to determine majority attribute value, attribute " + attribute + " not found");
+            return null;
+        }
+        // initialize counters for values
+        Map<String, Integer> counts = attributeValueCounts(attribute);
+        // initialize
+        int maxCount = 0;
+        String maxValue = "";
+        // compute majority count
+        for(String value: counts.keySet()) {
+            if(counts.get(value) > maxCount) {
+                maxCount = counts.get(value);
+                maxValue = value;
+            }
+        }
+        return maxValue;
+    }
+    
+    /**
      * Compute the percent purity of the majority classifier
      * @param instances
      * @return majority classifier count
@@ -265,7 +323,7 @@ public class Instances implements Serializable {
             return null;
         }
         // get attribute value set
-        Set<Double> values = attributes.get(attribute).values();
+        Set<String> values = values(attribute);
         // allocate array of instances for size of value set
         Instances[] split = new Instances[values.size()];
         // instantiate instances for each value
@@ -273,7 +331,7 @@ public class Instances implements Serializable {
             split[i] = new Instances();
         };
         // convert value set to array list for indexing
-        List<Double> indexed = new ArrayList<Double>(values);
+        List<String> indexed = new ArrayList<String>(values);
         // split instances using indexed attribute value
         for(Instance instance: instances) {
             split[indexed.indexOf(instance.value(attribute))].add(instance);
@@ -299,8 +357,6 @@ public class Instances implements Serializable {
         }
         // binary split
         int k = 2;
-        // get attribute value set
-        Set<Double> values = attributes.get(attribute).values();
         // allocate array of instances for size of value set
         Instances[] split = new Instances[k];
         // instantiate instances for each value
@@ -310,7 +366,7 @@ public class Instances implements Serializable {
         };
         // split instances using indexed attribute value
         for(Instance instance: instances) {
-            if((Double)instance.value(attribute) <= value) {
+            if((Double)instance.valueDouble(attribute) <= value) {
                 split[0].add(instance);
             } else {
                 split[1].add(instance);
@@ -365,7 +421,7 @@ public class Instances implements Serializable {
                 // parse data record
                 p = new RecordParser(r);
                 // add the instance attribute names and values
-                add(names, p.doubles(), p.classifier());
+                add(names, p.values(), p.classifier());
             }
         } catch (FileNotFoundException e){
             System.out.println("FileNotFoundException issued");

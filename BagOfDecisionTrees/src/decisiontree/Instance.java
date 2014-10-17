@@ -4,9 +4,13 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class Instance implements Serializable {
-    private Map<String, Double> values;
+    private static final Log log = LogFactory.getLog(Instance.class);
+    private Map<String, String> values;
+    private Map<String, Double> valuesDouble;
     private String classifier;
 
     /**
@@ -15,22 +19,24 @@ public class Instance implements Serializable {
      * @param values
      * @param classifier 
      */
-    public Instance(String[] names, Double[] values, String classifier){
-        this.values = new LinkedHashMap<String, Double>();
+    public Instance(String[] names, String[] values, String classifier){
+        this.valuesDouble = new LinkedHashMap<String, Double>();
+        this.values = new LinkedHashMap<String, String>();
         this.classifier = classifier;
         for(int i = 0; i < names.length; i++){
+            // all attributes available as discrete string values
             this.values.put(names[i], values[i]);
+            // marked attributes available as continuous ranged values
+            if(isContinuous(names[i])) {
+                Double d = 0.0;
+                try {
+                    d = Double.parseDouble(values[i]);
+                } catch (NumberFormatException nfe) {
+                    log.info("Number format exception for value " + values[i] + " on attribute " + names[i]);
+                }
+                this.valuesDouble.put(names[i], d);
+            }
         }
-    }
-    
-    /**
-     * Constructor for instance given a map of names and values
-     * @param attributes
-     * @param classifier 
-     */
-    public Instance(Map<String, Double> attributes, String classifier){
-        this.classifier = classifier;
-        this.values = attributes;
     }
     
     /**
@@ -44,10 +50,39 @@ public class Instance implements Serializable {
     /**
      * Getter method for a specific attribute value
      * @param name
-     * @return 
+     * @return string value
      */
-    public Double value(String name){
+    public String value(String name){
         return values.get(name);
+    }
+    
+    /**
+     * Getter method for a specific attribute value
+     * @param name
+     * @return double value
+     */
+    public Double valueDouble(String name){
+        return valuesDouble.get(name);
+    }
+
+    /**
+     * Getter method for whether a given attribute contains
+     * continuous ranged values
+     * @param name
+     * @return true if the attribute contains continuous ranged values
+     */
+    public static boolean isContinuous(String name) {
+        return name.startsWith("#", 0);
+    }
+
+    /**
+     * Getter method for whether a given attribute contains
+     * discrete values
+     * @param name
+     * @return true if the attribute contains discrete values
+     */
+    public static boolean isDiscrete(String name) {
+        return name.startsWith("@") || !name.startsWith("#", 0);
     }
 
     /**
