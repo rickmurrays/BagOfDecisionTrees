@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,19 +71,58 @@ public class Id3 implements Serializable {
         // update attributes tested
         List<String> attributesTested = node.attributesTested();
         attributesTested.add(node.attribute());
-        // compute binary split
-        node.setSplit(computeBinarySplit(node.instances(), node.attribute()));
-        log.info("Node binary split value " + node.split());
-        // split instances using binary split value
-        Instances[] split = node.instances().split(node.attribute(), node.split());
-        // create child nodes
-        node.setLeft(new Id3Node(split[0], attributesTested, node));
-        node.setRight(new Id3Node(split[1], attributesTested, node));
-        // traverse child nodes
-        log.info("Traversing left node");
-        traverse((Id3Node)node.left());
-        log.info("Traversing right node");
-        traverse((Id3Node)node.right());
+        // determine if this node has continuous ranged values
+        if(node.isContinuous()) {
+            /**
+             * When the attribute selected for the node contains
+             * continuous ranged values, a binary split algorithm
+             * is used to split the values across left and right
+             * child nodes
+             */
+            log.info("Node will traverse a binary split");
+            // compute binary split
+            node.setSplit(computeBinarySplit(node.instances(), node.attribute()));
+            log.info("Node binary split value " + node.split());
+            // split instances using binary split value
+            Instances[] split = node.instances().split(node.attribute(), node.split());
+            // create child nodes
+            node.setLeft(new Id3Node(split[0], attributesTested, node));
+            node.setRight(new Id3Node(split[1], attributesTested, node));
+            // traverse child nodes
+            log.info("Traversing left node");
+            traverse((Id3Node)node.left());
+            log.info("Traversing right node");
+            traverse((Id3Node)node.right());
+        } else {
+            /**
+             * Otherwise, it's assumed that the attribute selected
+             * for the node contains discrete values. For this case,
+             * the set of possible values for the attribute will be
+             * used to split the instances across multiple child nodes
+             */
+            log.info("Node will traverse a discrete value split");
+            // split instances using discrete values
+            Instances[] split = node.instances().split(node.attribute());
+            // get attribute value set
+            Set<String> values = node.instances().values(node.attribute());
+            // convert value set to array list for indexing
+            List<String> indexed = new ArrayList<String>(values);
+            // create child node array
+            Id3Node[] children = new Id3Node[split.length];
+            // create child nodes
+            for(int i = 0; i < split.length; i++) {
+                // create the child node
+                children[i] = new Id3Node(split[i], attributesTested, node);
+                // set the attribute split value
+                children[i].setValue(indexed.get(i));
+            }
+            // add child nodes to parent
+            node.add(children);
+            // traverse child nodes
+            for(int i = 0; i < split.length; i++) {
+                traverse(children[i]);
+            }
+        }
     }
     
     /**
@@ -194,12 +232,33 @@ public class Id3 implements Serializable {
     public String classify(Id3Node node, Instance instance) {
         // return node classification if defined
         if(node.classifier() != null) return node.classifier();
-        // otherwise traverse child nodes to get classification
-        if(instance.value(node.attribute()) <= node.split()) {
-            return classify((Id3Node)node.left(), instance);
+        // determine if the attribute on this node is continuous
+        if(node.isContinuous()) {
+            // traverse binary child nodes to get classification
+            if(instance.valueDouble(node.attribute()) <= node.split()) {
+                return classify((Id3Node)node.left(), instance);
+            } else {
+                return classify((Id3Node)node.right(), instance);
+            }
         } else {
-            return classify((Id3Node)node.right(), instance);
+            // get attribute values for the node
+            Set<String> values = node.instances().values(node.attribute());
+            // get current attribute value for the instance
+            String value = instance.value(node.attribute());
+            // determine majority attrinbute value when current is missing
+            if(!values.contains(value)) {
+                value = node.instances().majorityAttributeValue(value);
+            }
+            // traverse discrete value child nodes to get classification
+            for(Node inode: node.children()) {
+                if(((Id3Node)inode).value().equals(value)) {
+                    return classify((Id3Node)inode, instance);
+                }
+            }
         }
+        // this point should be unreachable, but return the majority
+        // classifier as a failsafe
+        return node.instances().majorityClassifier();
     }
     
     /**
@@ -282,7 +341,7 @@ public class Id3 implements Serializable {
      */
     private double computeBinarySplit(Instances instances, String attribute) {
         // get list of sorted values
-        List<Double> values = Arrays.asList(instances.values(attribute).toArray(new Double[0]));
+        List<Double> values = Arrays.asList(instances.valuesDouble(attribute).toArray(new Double[0]));
         Collections.sort(values);
         // initialize values
         int pass = 0;

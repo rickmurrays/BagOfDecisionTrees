@@ -10,11 +10,9 @@ public class Id3Node extends Node implements Serializable {
     private String classifier;
     private String attribute;
     private double split;
-    private double value;
+    private String value;
     private double purity;
     private double entropy;
-
-    
 
     /**
      * Constructor for root node
@@ -68,6 +66,14 @@ public class Id3Node extends Node implements Serializable {
     }
     
     /**
+     * Getter method for attribute value
+     * @return attribute value
+     */
+    public String value() {
+        return value;
+    }
+    
+    /**
      * Getter method for split value
      * @return 
      */
@@ -76,11 +82,21 @@ public class Id3Node extends Node implements Serializable {
     }
     
     /**
-     * Getter method for attribute value
-     * @return attribute value
+     * Getter method for whether the attribute on this node contains
+     * continuous ranged values
+     * @return 
      */
-    public double value() {
-        return value;
+    public boolean isContinuous() {
+        return Instance.isContinuous(attribute);
+    }
+    
+    /**
+     * Getter method for whether the attribute on this node contains
+     * discrete values
+     * @return 
+     */
+    public boolean isDiscrete() {
+        return Instance.isDiscrete(attribute);
     }
     
     /**
@@ -143,7 +159,7 @@ public class Id3Node extends Node implements Serializable {
      * Set attribute value for this node
      * @param value 
      */
-    public void setValue(double value) {
+    public void setValue(String value) {
         this.value = value;
     }
 

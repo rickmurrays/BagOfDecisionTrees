@@ -37,6 +37,8 @@ public class RecordParser {
     
     /**
      * Getter method for array of values typed double
+     * Note - use this method only if you know all of your values are
+     * continuous ranged values, i.e. real numbers
      * @return 
      */
     public Double[] doubles() {

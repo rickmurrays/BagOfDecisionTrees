@@ -10,7 +10,7 @@ import java.util.Set;
 public class Attribute implements Serializable {
     private int index;
     private String name;
-    private Set<Double> values;
+    private Set<String> values;
 
     /**
      * Constructor for attribute given name and set of values
@@ -18,7 +18,7 @@ public class Attribute implements Serializable {
      * @param values
      * @param classifier 
      */
-    public Attribute(String name, Set<Double> values, int index){
+    public Attribute(String name, Set<String> values, int index){
         this.name = name;
         this.index = index;
         this.values = values;
@@ -32,14 +32,14 @@ public class Attribute implements Serializable {
     public Attribute(String name, int index) {
         this.name = name;
         this.index = index;
-        this.values = new HashSet<Double>();
+        this.values = new HashSet<String>();
     }
 
     /**
      * Add all values from the given set
      * @param values 
      */
-    public void add(Set<Double> values){
+    public void add(Set<String> values){
         this.values = values;
     }
     
@@ -47,7 +47,7 @@ public class Attribute implements Serializable {
      * Add the given value to the set
      * @param value 
      */
-    public void add(Double value) {
+    public void add(String value) {
         values.add(value);
     }
 
@@ -79,7 +79,7 @@ public class Attribute implements Serializable {
      * Getter for the set of values
      * @return set of values
      */
-    public Set<Double> values() {
+    public Set<String> values() {
         return values;
     }
 
