@@ -64,7 +64,7 @@ public class Instances implements Serializable {
      * Add instance to the linked list
      * @param instance 
      */
-    private void add(Instance instance) {
+    public void add(Instance instance) {
         // add instance
         instances.add(instance);
     }
@@ -440,7 +440,7 @@ public class Instances implements Serializable {
     /**
      * Map attributes from set of instances
      */
-    private void map() {
+    public void map() {
         int index = 0;
         attributes = new HashMap<String, Attribute>();
         for(String name: attributes()) {
