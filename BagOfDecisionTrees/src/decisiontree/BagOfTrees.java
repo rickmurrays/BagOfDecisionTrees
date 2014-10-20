@@ -181,7 +181,6 @@ public class BagOfTrees {
 
 		// Pull out one of the trees from the bag and try to classify our test
 		// records
-		Id3 tree = botIn.get(9);
 		System.out.println(botIn.classifyByVote(instanceToClasify));
 		System.out.println(botIn.classifyByVote(instanceToClasify2));
 	}
