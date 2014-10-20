@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class BagOfTrees {
@@ -98,9 +99,43 @@ public class BagOfTrees {
 	}
 
 	/**
-	 * @param args
-	 *            the command line arguments
+	 * Vote on the most common classification for the given instance
+	 * 
+	 * @param instance
+	 * @return
 	 */
+	public String classifyByVote(Instance instance) {
+		HashMap<String, Integer> possibleClassifications = new HashMap<String, Integer>();
+
+		// Use each tree in the bag to classify the instance
+		for (Id3 tree : bagOfTrees) {
+			String classification = tree.classify(instance);
+
+			// If we haven't encountered this classification before, add it to
+			// the map
+			if (!possibleClassifications.keySet().contains(classification)) {
+				possibleClassifications.put(classification, 0);
+			}
+
+			possibleClassifications.put(classification, possibleClassifications
+					.get(classification).intValue() + 1);
+		}
+
+		// Return them most popular tree
+		String mostPopularClassification = null;
+		for (String key : possibleClassifications.keySet()) {
+			if (mostPopularClassification == null) {
+				mostPopularClassification = key;
+			}
+
+			mostPopularClassification = (possibleClassifications.get(key) > possibleClassifications
+					.get(mostPopularClassification)) ? key
+					: mostPopularClassification;
+		}
+
+		return mostPopularClassification;
+	}
+
 	public static void main(String[] args) {
 		testBagOfTrees();
 
@@ -147,8 +182,8 @@ public class BagOfTrees {
 		// Pull out one of the trees from the bag and try to classify our test
 		// records
 		Id3 tree = botIn.get(9);
-		System.out.println(tree.classify(instanceToClasify));
-		System.out.println(tree.classify(instanceToClasify2));
+		System.out.println(botIn.classifyByVote(instanceToClasify));
+		System.out.println(botIn.classifyByVote(instanceToClasify2));
 	}
 
 }
