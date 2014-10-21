@@ -12,7 +12,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class BagOfTrees {
+	private static final Log log = LogFactory.getLog(BagOfTrees.class);
 
 	private List<Id3> bagOfTrees;
 
@@ -146,21 +150,27 @@ public class BagOfTrees {
 	 */
 	public static void testBagOfTrees() {
 
-		String PATH_TO_FILE = "data/iris.data";
+		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt";
+		
+		log.info("Loading instances from file");
 
 		// Load instances from file
 		Instances instances = new Instances(new File(PATH_TO_FILE));
+		
+		log.info("Instantiating a new tree trainer with the loaded instances");
 
 		// Instantiate new TreeTrainer using the loaded instances
 		TreeTrainer treeTrainer = new TreeTrainer(instances);
 
+		log.info("Instantiating new bag of trees");
 		// Instantiate new BagOfTrees
 		BagOfTrees bot = new BagOfTrees();
-
+		
+		log.info("Add 10 new randomly created trees to the bag");
 		// Add 10 trees trained on random attributes to the bag of trees
 		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(10));
 
-		// Serialize the bag to an out file
+/*		// Serialize the bag to an out file
 		bot.serializeBagToFile("data/test.txt");
 
 		// Create some test instances that we can try and classify
@@ -182,7 +192,7 @@ public class BagOfTrees {
 		// Pull out one of the trees from the bag and try to classify our test
 		// records
 		System.out.println(botIn.classifyByVote(instanceToClasify));
-		System.out.println(botIn.classifyByVote(instanceToClasify2));
+		System.out.println(botIn.classifyByVote(instanceToClasify2));*/
 	}
 
 }

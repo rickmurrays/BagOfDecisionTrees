@@ -11,14 +11,15 @@ import org.apache.commons.logging.LogFactory;
 
 public class TreeTrainer {
 	private static final Log log = LogFactory.getLog(TreeTrainer.class);
-	
+
 	private Instances instances;
-	
+
 	/**
 	 * Default constructor
+	 * 
 	 * @param instances
 	 */
-	public TreeTrainer(Instances instances){
+	public TreeTrainer(Instances instances) {
 		this.instances = instances;
 	}
 
@@ -91,22 +92,25 @@ public class TreeTrainer {
 
 		return subInstances;
 	}
-	
+
 	/**
-	 * Create a new tree from a random set of attributes 
-	 * @param count Number of trees to return
+	 * Create a new tree from a random set of attributes
+	 * 
+	 * @param count
+	 *            Number of trees to return
 	 * @return Array of trees trained on random attributes
 	 */
-	public Id3[] getTreesTrainedFromRandomAttributes(int count){
-		Instances randomInstances = splitInstancesByAttributesRandomly(this.instances);
-		
+	public Id3[] getTreesTrainedFromRandomAttributes(int count) {
 		Id3[] trees = new Id3[count];
-		
+
 		for (int i = 0; i < count; i++) {
+			log.info("Creating tree " + i + " from random attributes");
+			Instances randomInstances = splitInstancesByAttributesRandomly(this.instances);
+
 			trees[i] = new Id3(randomInstances);
 			trees[i].traverse();
 		}
-		
+
 		return trees;
 	}
 }
