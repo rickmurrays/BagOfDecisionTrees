@@ -59,7 +59,8 @@ public class BagOfTrees {
 			ObjectOutputStream oos = new ObjectOutputStream(fout);
 
 			oos.writeObject(bagOfTrees);
-			oos.close();
+			oos.flush();
+			fout.close();
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -168,10 +169,19 @@ public class BagOfTrees {
 		
 		log.info("Add 10 new randomly created trees to the bag");
 		// Add 10 trees trained on random attributes to the bag of trees
-		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(1));
-
+		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(10));
+		
 		// Serialize the bag to an out file
 		bot.serializeBagToFile("data/test.txt");
+		
+		bot = null;
+		instances = null;
+		treeTrainer = null;
+		
+		
+		BagOfTrees botIn = new BagOfTrees();
+		botIn.readBagFromFile("data/test.txt");
+		
 		/*
 		// Create some test instances that we can try and classify
 		String[] names = { "#sepal-length", "#sepal-width", "#petal-length",

@@ -90,6 +90,8 @@ public class Id3 implements Serializable {
             node.setRight(new Id3Node(split[1], attributesTested, node));
             
             attributesTested= null;
+            testInstance = null;
+            testInstances =null;
             split = null;
             System.gc();
             
@@ -130,6 +132,8 @@ public class Id3 implements Serializable {
             }
             
             attributesTested= null;
+            testInstance = null;
+            testInstances =null;
             split = null;
             System.gc();
         }
