@@ -309,7 +309,10 @@ public class Id3 implements Serializable {
         } else {
             log.info("Computed max info gain error");
         }
-        return maxIndex >= 0 ? attribute[maxIndex] : null;
+        
+        // TODO: Check this logic, if the maxIndex was not identified, then split on the first attribute. 
+        // This is a temp fix, the reason why this condition would occur needs to be looked at
+        return maxIndex >= 0 ? attribute[maxIndex] : attribute[0];
     }
     
     /**

@@ -150,7 +150,7 @@ public class BagOfTrees {
 	 */
 	public static void testBagOfTrees() {
 
-		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt";
+		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
 		
 		log.info("Loading instances from file");
 
@@ -168,11 +168,11 @@ public class BagOfTrees {
 		
 		log.info("Add 10 new randomly created trees to the bag");
 		// Add 10 trees trained on random attributes to the bag of trees
-		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(10));
+		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(1));
 
-/*		// Serialize the bag to an out file
+		// Serialize the bag to an out file
 		bot.serializeBagToFile("data/test.txt");
-
+		/*
 		// Create some test instances that we can try and classify
 		String[] names = { "#sepal-length", "#sepal-width", "#petal-length",
 				"#petal-width" };
