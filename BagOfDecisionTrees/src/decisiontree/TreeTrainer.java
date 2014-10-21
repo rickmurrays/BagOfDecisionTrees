@@ -109,6 +109,8 @@ public class TreeTrainer {
 
 			trees[i] = new Id3(randomInstances);
 			trees[i].traverse();
+			// Try and clean up the tree of the instance data that it contains
+			trees[i].dropInstances();
 		}
 
 		return trees;

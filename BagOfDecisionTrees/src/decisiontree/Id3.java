@@ -88,6 +88,11 @@ public class Id3 implements Serializable {
             // create child nodes
             node.setLeft(new Id3Node(split[0], attributesTested, node));
             node.setRight(new Id3Node(split[1], attributesTested, node));
+            
+            attributesTested= null;
+            split = null;
+            System.gc();
+            
             // traverse child nodes
             log.info("Traversing left node");
             traverse((Id3Node)node.left());
@@ -116,12 +121,17 @@ public class Id3 implements Serializable {
                 // set the attribute split value
                 children[i].setValue(indexed.get(i));
             }
+            
             // add child nodes to parent
             node.add(children);
             // traverse child nodes
             for(int i = 0; i < split.length; i++) {
                 traverse(children[i]);
             }
+            
+            attributesTested= null;
+            split = null;
+            System.gc();
         }
     }
     
@@ -407,5 +417,16 @@ public class Id3 implements Serializable {
             }
             System.out.println("\n");
         }
+    }
+    
+    public void dropInstances(){
+    	this.instances = null;
+    	this.testInstance = null;
+    	this.testInstances = null;
+    	removeAllInstances();
+    }
+    
+    public void removeAllInstances(){
+    	root.clearInstances(root);
     }
 }

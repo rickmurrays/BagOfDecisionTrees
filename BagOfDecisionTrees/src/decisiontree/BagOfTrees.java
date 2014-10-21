@@ -150,7 +150,7 @@ public class BagOfTrees {
 	 */
 	public static void testBagOfTrees() {
 
-		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
+		String PATH_TO_FILE = "data/kddcup.data_2_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
 		
 		log.info("Loading instances from file");
 
