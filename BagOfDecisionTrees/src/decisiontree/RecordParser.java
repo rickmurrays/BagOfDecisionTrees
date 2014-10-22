@@ -20,11 +20,21 @@ public class RecordParser {
         // make sure there is data to parse
         if(s == null || s.length() == 0) return;
         // split string and convert to array list
-        attributes = new ArrayList<String>(Arrays.asList(s.split(",")));
+        
+        attributes = new ArrayList<String>();
+        for (String str : s.split(",")) {
+			attributes.add(new String(str).intern());
+		}
+        //attributes = new ArrayList<String>(Arrays.asList(s.split(",")));
         // extract values from the array list, which excludes the last column
-        values = attributes.subList(0, attributes.size()-1);
+        values = new ArrayList<String>();
+        //attributes.subList(0, attributes.size()-1);
+        for(String str: attributes.subList(0, attributes.size()-1)){
+        	values.add(new String(str).intern());
+        }
+        
         // extract classifier from the array list, which is the last column
-        classifier = attributes.get(attributes.size()-1);
+        classifier = new String(attributes.get(attributes.size()-1)).intern();
     }
     
     /**

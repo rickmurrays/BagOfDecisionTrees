@@ -88,6 +88,13 @@ public class Id3 implements Serializable {
             // create child nodes
             node.setLeft(new Id3Node(split[0], attributesTested, node));
             node.setRight(new Id3Node(split[1], attributesTested, node));
+            
+            attributesTested= null;
+            testInstance = null;
+            testInstances =null;
+            split = null;
+            System.gc();
+            
             // traverse child nodes
             log.info("Traversing left node");
             traverse((Id3Node)node.left());
@@ -116,12 +123,19 @@ public class Id3 implements Serializable {
                 // set the attribute split value
                 children[i].setValue(indexed.get(i));
             }
+            
             // add child nodes to parent
             node.add(children);
             // traverse child nodes
             for(int i = 0; i < split.length; i++) {
                 traverse(children[i]);
             }
+            
+            attributesTested= null;
+            testInstance = null;
+            testInstances =null;
+            split = null;
+            System.gc();
         }
     }
     
@@ -309,7 +323,10 @@ public class Id3 implements Serializable {
         } else {
             log.info("Computed max info gain error");
         }
-        return maxIndex >= 0 ? attribute[maxIndex] : null;
+        
+        // TODO: Check this logic, if the maxIndex was not identified, then split on the first attribute. 
+        // This is a temp fix, the reason why this condition would occur needs to be looked at
+        return maxIndex >= 0 ? attribute[maxIndex] : attribute[0];
     }
     
     /**
@@ -404,5 +421,16 @@ public class Id3 implements Serializable {
             }
             System.out.println("\n");
         }
+    }
+    
+    public void dropInstances(){
+    	this.instances = null;
+    	this.testInstance = null;
+    	this.testInstances = null;
+    	removeAllInstances();
+    }
+    
+    public void removeAllInstances(){
+    	root.clearInstances(root);
     }
 }

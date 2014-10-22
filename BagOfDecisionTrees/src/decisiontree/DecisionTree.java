@@ -38,6 +38,15 @@ public class DecisionTree {
         log.info("Loaded " + instances.size() + " instances");
     }
     
+    /**
+     * Constructor for decision tree with given instances
+     * @param instances
+     */
+    public DecisionTree(Instances instances){
+    	this.instances = instances;
+    }
+    
+    
     public void crossValidation() {
         // split instances for cross validation tests
         split = instances.split(CROSS_VALIDATION_SIZE);
