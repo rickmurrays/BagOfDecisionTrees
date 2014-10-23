@@ -32,6 +32,9 @@ public class TrainingProgram {
 		trainTrees();
 	}
 
+	/**
+	 * Break up raw training data into small chunks and train trees off of those chunks
+	 */
 	private void trainTrees() {
 		// Break up the raw training data into small pieces that trees will be
 		// trained from
