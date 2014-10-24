@@ -12,9 +12,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Id3 implements Serializable {
-    private static final Log log = LogFactory.getLog(Id3.class);
-    private Instances testInstances;
-    private List<Instance> testInstance;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2207104919203465801L;
+	private static final Log log = LogFactory.getLog(Id3.class);
+    private transient Instances testInstances;
+    private transient List<Instance> testInstance;
     private List<String> predicted;
     private Instances instances;
     private double accuracy;
@@ -256,13 +260,13 @@ public class Id3 implements Serializable {
             }
         } else {
             // get attribute values for the node
-            Set<String> values = node.instances().values(node.attribute());
+            //Set<String> values = node.instances().values(node.attribute());
             // get current attribute value for the instance
             String value = instance.value(node.attribute());
             // determine majority attrinbute value when current is missing
-            if(!values.contains(value)) {
+           /* if(!values.contains(value)) {
                 value = node.instances().majorityAttributeValue(value);
-            }
+            }*/
             // traverse discrete value child nodes to get classification
             for(Node inode: node.children()) {
                 if(((Id3Node)inode).value().equals(value)) {

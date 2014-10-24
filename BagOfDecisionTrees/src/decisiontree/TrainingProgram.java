@@ -50,6 +50,11 @@ public class TrainingProgram {
 		}
 
 	}
+	
+	private Id3[] trainTrees(Instances instances){
+		return null;
+		
+	}
 
 	/**
 	 * Given a file name, load the data in the rawTrainingData list, then call

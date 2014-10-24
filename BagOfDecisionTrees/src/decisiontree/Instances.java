@@ -21,11 +21,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Instances implements Serializable {
-    private static final Log log = LogFactory.getLog(Instances.class);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3715065284920575165L;
+	private static final Log log = LogFactory.getLog(Instances.class);
     // attributes derived from instances
     public Map<String, Attribute> attributes;
     // instances for the set of data
-    private List<Instance> instances;
+    private transient List<Instance> instances;
     
     /**
      * Default constructor for instances
