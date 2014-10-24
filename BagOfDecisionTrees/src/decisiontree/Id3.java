@@ -361,6 +361,7 @@ public class Id3 implements Serializable {
         Map<String, MutableInt> counts = instances.classifierCounts();
         // compute entropy across all instances
         double entropy = 0;
+        
         log.info("Compute entropy for all instances");
         for(String classifier: counts.keySet()) {
             int count = counts.get(classifier).intValue();
