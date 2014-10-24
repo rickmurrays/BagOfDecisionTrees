@@ -15,6 +15,10 @@ import org.apache.commons.logging.LogFactory;
 
 public class Id3 implements Serializable {
     private static final Log log = LogFactory.getLog(Id3.class);
+    
+    // compute log(2) constant to help performance
+    private static double log2 = Math.log(2);
+    
     private Instances testInstances;
     private List<Instance> testInstance;
     private List<String> predicted;
@@ -323,8 +327,7 @@ public class Id3 implements Serializable {
         Map<String, MutableInt> valueCounts = instances.attributeValueCounts(attribute);
         // instantiate map of values to entropies
         Map<String, Double> entropies = new HashMap<String, Double>();
-        // compute log(2) constant to help performance
-        double log2 = Math.log(2);
+        
         // for each mapped attribute value
         for(String value: mappedCounts.keySet()) {
             log.info("Compute entropy for attribute " + attribute + " value " + value);
