@@ -77,6 +77,20 @@ public class Instances implements Serializable {
     }
     
     /**
+     * Constructor for instances given a list of Instance objects
+     * @param intanceObjects
+     */
+    public Instances(List<Instance> intanceObjects){
+    	this();
+    	
+    	for (Instance instance : intanceObjects) {
+			add(instance);
+		}
+    }
+    
+    
+    
+    /**
      * Add instance to the linked list given an array of names and values
      * @param names
      * @param values
