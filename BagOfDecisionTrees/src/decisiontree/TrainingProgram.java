@@ -23,37 +23,71 @@ public class TrainingProgram {
 	private String classifier;
 	private ArrayList<String> rawTrainingData; // hold 66% of data for training
 	private ArrayList<String> rawTestingData; // hold 33% of data for testing
-	
-	
 
-	public TrainingProgram(String path_to_file) {
+	private BagOfTrees bagOfTrees;
+
+	/**
+	 * Default constructor
+	 */
+	public TrainingProgram() {
+
+	}
+
+	public int getBagOfTreesSize() {
+		return bagOfTrees.count();
+	}
+
+	public void Run(String path_to_file) {
+		bagOfTrees = new BagOfTrees();
+
 		loadData(path_to_file);
 
-		trainTrees();
+		trainTreesOnDataSplits();
 	}
 
 	/**
-	 * Break up raw training data into small chunks and train trees off of those chunks
+	 * Break up raw training data into small chunks and train trees off of those
+	 * chunks
 	 */
-	private void trainTrees() {
+	private void trainTreesOnDataSplits() {
 		// Break up the raw training data into small pieces that trees will be
 		// trained from
-		int dataSplitFactor = 50;
+		int dataSplitFactor = 10;
 		int dataSplit = rawTrainingData.size() / dataSplitFactor;
 
 		for (int i = 0; i < dataSplitFactor; i++) {
-			int from = i * dataSplit;
-			int to = (i == dataSplitFactor - 1) ? rawTrainingData.size() : from
-					+ dataSplit; // In case of odd numbers, make sure we catch
-									// the last record
+			List<Instance> tempInstances = new ArrayList<Instance>(
+					dataSplitFactor);
+			int fromItem = i * dataSplit;
+			int toItem = (i == dataSplitFactor - 1) ? rawTrainingData.size()
+					: fromItem + dataSplit; // In case of odd numbers, make sure
+											// we catch
+											// the last record
+			RecordParser parser;
 
+			// Create a list of Instance objects to train random trees from
+			for (int j = fromItem; j < toItem; j++) {
+				// parse data record
+				parser = new RecordParser(rawTrainingData.get(j));
+				// add the instance attribute names and values
+				tempInstances.add(new Instance(attributeNames, parser.values(),
+						parser.classifier()));
+			}
+
+			Instances instances = new Instances(tempInstances);
+
+			// Add to the bag the randomly trained trees
+			bagOfTrees.addTrees(trainTrees(instances, 10));
 		}
 
 	}
-	
-	private Id3[] trainTrees(Instances instances){
-		return null;
-		
+
+	private Id3[] trainTrees(Instances instances, int treeCount) {
+		// Instantiate new TreeTrainer using the loaded instances
+		TreeTrainer treeTrainer = new TreeTrainer(instances);
+
+		// Return randomly trained trees
+		return treeTrainer.getTreesTrainedFromRandomAttributes(treeCount);
 	}
 
 	/**
@@ -117,12 +151,20 @@ public class TrainingProgram {
 	}
 
 	public static void main(String[] args) {
-
+		long t = System.currentTimeMillis();
+		
 		// testBagOfTrees();
-		String PATH_TO_FILE = "data/kddcup.data.txt";
-		TrainingProgram trainingProgram = new TrainingProgram(PATH_TO_FILE);
+		String PATH_TO_FILE = "data/kddcup.data_xsm.txt";
+		TrainingProgram trainingProgram = new TrainingProgram();
+		trainingProgram.Run(PATH_TO_FILE);
 
-		System.out.println("TrainingProgram.main()");
+		int count = trainingProgram.getBagOfTreesSize();
+
+		System.out.println("Started at " + t);
+		
+		System.out.println("TreeBagCount: " + count);
+
+		System.out.println("Stopped at " + System.currentTimeMillis());
 	}
 
 	/**
@@ -134,28 +176,6 @@ public class TrainingProgram {
 		// //iris.data
 		// //kddcup.data_2_percent.txt
 
-		log.info("Loading instances from file");
-
-		// Load instances from file
-		Instances instances = new Instances(new File(PATH_TO_FILE));
-
-		log.info("Instantiating a new tree trainer with the loaded instances");
-
-		// Instantiate new TreeTrainer using the loaded instances
-		TreeTrainer treeTrainer = new TreeTrainer(instances);
-
-		log.info("Instantiating new bag of trees");
-		// Instantiate new BagOfTrees
-		BagOfTrees bot = new BagOfTrees();
-
-		log.info("Add 10 new randomly created trees to the bag");
-		// Add 10 trees trained on random attributes to the bag of trees
-		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(3));
-
-		// Serialize the bag to an out file
-		// bot.serializeBagToFile("data/test.txt");
-
-		log.info("Program END");
 
 		// Create some test instances that we can try and classify
 		String[] names = { "#duration", "@protocol_type", "@service", "@flag",
@@ -186,30 +206,5 @@ public class TrainingProgram {
 
 		Instance instanceToClasify = new Instance(names, valuesSmurf, null);
 		Instance instanceToClasify2 = new Instance(names, valuesNormal, null);
-
-		System.out.println(bot.classifyByVote(instanceToClasify));
-		System.out.println(bot.classifyByVote(instanceToClasify2));
-
-		/*
-		 * // Create a new bag of trees that will read in the previously
-		 * serialized // tree set BagOfTrees botIn = new BagOfTrees();
-		 * botIn.readBagFromFile("data/test.txt");
-		 * 
-		 * // Create some test instances that we can try and classify String[]
-		 * names = { "#sepal-length", "#sepal-width", "#petal-length",
-		 * "#petal-width" };
-		 * 
-		 * String[] valuesSersota = { "5.5", "4.2", "1.4", "0.2" }; String[]
-		 * valuesVersicolor = { "5.7", "2.6", "3.5", "1.0" };
-		 * 
-		 * Instance instanceToClasify = new Instance(names, valuesSersota,
-		 * null);// "Iris-setosa" Instance instanceToClasify2 = new
-		 * Instance(names, valuesVersicolor, null); // "Iris-versicolor"
-		 * 
-		 * // Pull out one of the trees from the bag and try to classify our
-		 * test // records
-		 * System.out.println(botIn.classifyByVote(instanceToClasify));
-		 * System.out.println(botIn.classifyByVote(instanceToClasify2));
-		 */
 	}
 }
