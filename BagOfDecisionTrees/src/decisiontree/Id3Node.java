@@ -5,12 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Id3Node extends Node implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2385446682051338699L;
 	private List<String> attributesTested;
-	private transient Instances instances;
+	private Instances instances;
 	private String classifier;
 	private String attribute;
 	private double split;

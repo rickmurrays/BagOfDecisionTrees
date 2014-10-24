@@ -30,7 +30,7 @@ public class DecisionTree {
         /**
          * Load instances from file
          */
-        log.info("Loading file " + PATH_TO_FILE);
+        log.info("Loading file " + file);
         instances = new Instances(new File(file));
         if(instances.size() == 0) {
             log.warn("Instances set is null");

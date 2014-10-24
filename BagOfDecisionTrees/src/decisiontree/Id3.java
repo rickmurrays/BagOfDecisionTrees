@@ -8,17 +8,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Id3 implements Serializable {
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = -2207104919203465801L;
-	private static final Log log = LogFactory.getLog(Id3.class);
-    private transient Instances testInstances;
-    private transient List<Instance> testInstance;
+    private static final Log log = LogFactory.getLog(Id3.class);
+    private Instances testInstances;
+    private List<Instance> testInstance;
     private List<String> predicted;
     private Instances instances;
     private double accuracy;
@@ -91,13 +89,14 @@ public class Id3 implements Serializable {
             Instances[] split = node.instances().split(node.attribute(), node.split());
             // create child nodes
             node.setLeft(new Id3Node(split[0], attributesTested, node));
+            log.info("Left node contains " + split[0].size() + " instances");
             node.setRight(new Id3Node(split[1], attributesTested, node));
+            log.info("Right node contains " + split[1].size() + " instances");
             
             attributesTested= null;
             testInstance = null;
             testInstances =null;
             split = null;
-            System.gc();
             
             // traverse child nodes
             log.info("Traversing left node");
@@ -260,13 +259,13 @@ public class Id3 implements Serializable {
             }
         } else {
             // get attribute values for the node
-            //Set<String> values = node.instances().values(node.attribute());
+            Set<String> values = node.instances().values(node.attribute());
             // get current attribute value for the instance
             String value = instance.value(node.attribute());
             // determine majority attrinbute value when current is missing
-           /* if(!values.contains(value)) {
-                value = node.instances().majorityAttributeValue(value);
-            }*/
+            if(!values.contains(value)) {
+                value = node.instances().majorityAttributeValue(node.attribute());
+            }
             // traverse discrete value child nodes to get classification
             for(Node inode: node.children()) {
                 if(((Id3Node)inode).value().equals(value)) {
@@ -280,22 +279,96 @@ public class Id3 implements Serializable {
     }
     
     /**
+     * Compute classifier counts for each attribute value in the instance set
+     * @param instances
+     * @param attribute
+     * @return map of values to map of classifiers to counts
+     */
+    public Map<String, HashMap<String, MutableInt>> computeClassifierCounts(Instances instances, String attribute) {
+        // instantiate map of values to hashmap of classifiers to counts
+        Map<String, HashMap<String, MutableInt>> mappedCounts = new HashMap<String, HashMap<String, MutableInt>>();
+        // for each instance in the set
+        for(Instance instance: instances.instances()) {
+            // get the attribute value
+            String value = instance.value(attribute);
+            // retrieve the hashmap of classifiers to counts
+            HashMap<String, MutableInt> counts = mappedCounts.get(value);
+            // add the hashmap if not defined
+            if(counts == null) {
+                counts = new HashMap<String, MutableInt>();
+                mappedCounts.put(value, counts);
+            }
+            // retrieve classifier counter
+            MutableInt count = counts.get(instance.classifier());
+            if(count == null) {
+                // create classifier counter if not defined
+                counts.put(instance.classifier(), new MutableInt(1));
+            } else {
+                // increment classifier counter
+                count.increment();
+            }
+        }
+        return mappedCounts;
+    }
+    
+    /**
+     * Compute entropy values for each attribute value in the set of instances
+     * @param instances
+     * @return entropy value map
+     */
+    private Map<String, Double> computeEntropies(Instances instances, String attribute) {
+        // compute classifier counts for each attribute value
+        Map<String, HashMap<String, MutableInt>> mappedCounts = computeClassifierCounts(instances, attribute);
+        // retrieve attribute value counts
+        Map<String, MutableInt> valueCounts = instances.attributeValueCounts(attribute);
+        // instantiate map of values to entropies
+        Map<String, Double> entropies = new HashMap<String, Double>();
+        // compute log(2) constant to help performance
+        double log2 = Math.log(2);
+        // for each mapped attribute value
+        for(String value: mappedCounts.keySet()) {
+            log.info("Compute entropy for attribute " + attribute + " value " + value);
+            // retrieve value count
+            double valueCount = valueCounts.get(value).doubleValue();
+            // retrieve classifier counts
+            Map<String, MutableInt> counts = mappedCounts.get(value);
+            // compute entropy across all instances
+            double entropy = 0;
+            for(String classifier: counts.keySet()) {
+                int count = counts.get(classifier).intValue();
+                if(count > 0) {
+                    double probability = (double)count / valueCount;
+                    entropy -= probability * (Math.log(probability) / log2);
+                }
+                log.info("Classifier " + classifier + " entropy " + entropy + " on probability " + count + " / " + valueCount);
+            }
+            entropies.put(value, entropy);
+            log.info("Entropy " + entropy + " on attribute " + attribute + " value " + value);
+        }
+        return entropies;
+    }
+    
+    /**
      * Compute entropy for the set of instances
      * @param instances
      * @return entropy value
      */
     private double computeEntropy(Instances instances) {
         // initialize counters for classifiers
-        Map<String, Integer> counts = instances.classifierCounts();
+        Map<String, MutableInt> counts = instances.classifierCounts();
         // compute entropy across all instances
         double entropy = 0;
+        double log2 = Math.log(2);
+        log.info("Compute entropy for all instances");
         for(String classifier: counts.keySet()) {
-            int count = counts.get(classifier);
+            int count = counts.get(classifier).intValue();
             if(count > 0) {
                 double probability = (double)count / (double)instances.size();
-                entropy -= probability * (Math.log(probability) / Math.log(2));
+                entropy -= probability * (Math.log(probability) / log2);
             }
+            log.info("Classifier " + classifier + " entropy " + entropy + " on probability " + count + " / " + instances.size());
         }
+        log.info("Entropy " + entropy);
         return entropy;
     }
     
@@ -311,10 +384,11 @@ public class Id3 implements Serializable {
         String[] attribute = attributes.toArray(new String[attributes.size()]);
         // initialize
         int maxIndex = -1;
-        double maxInfoGain = 0;
+        double maxInfoGain = -1;
         // compute maximum information gain across all attributes
         for(int i = 0; i < attribute.length; i++) {
             if(!attributesTested.contains(attribute[i])) {
+                log.info("Computing info gain for attribute " + attribute[i]);
                 double infoGain = computeInfoGain(instances, attribute[i]);
                 if(infoGain > maxInfoGain) {
                     maxInfoGain = infoGain;
@@ -340,18 +414,22 @@ public class Id3 implements Serializable {
      * @return 
      */
     private double computeInfoGain(Instances instances, String attribute) {
+        // compute entropies
+        Map<String, Double> entropies = computeEntropies(instances, attribute);
+        // retrieve attribute counts
+        Map<String, MutableInt> counts = instances.attributeValueCounts(attribute);
         // compute entropy of instance set
         double infoGain = computeEntropy(instances);
-        // split instance set across attribute values
-        Instances[] split = instances.split(attribute);
         // compute information gain across all attribute values
-        for(int i = 0; i < instances.values(attribute).size(); i++) {
-            if(split[i].size() > 0) {
-                infoGain -= ((double)split[i].size() / (double)instances.size()) *
-                        computeEntropy(split[i]);
+        for(String value: entropies.keySet()) {
+            int count = counts.get(value).intValue();
+            if(count > 0) {
+                infoGain -= ((double)count / (double)instances.size()) *
+                        entropies.get(value);
             }
+            log.info("Info gain " + infoGain + " on " + count + " / " + instances.size() + " entropy " + entropies.get(value));
         }
-        log.info("Computed info gain " + infoGain + " for " + attribute);
+        log.info("Computed info gain " + infoGain + " on attribute " + attribute);
         return infoGain;
     }
     
@@ -364,6 +442,7 @@ public class Id3 implements Serializable {
         // get list of sorted values
         List<Double> values = Arrays.asList(instances.valuesDouble(attribute).toArray(new Double[0]));
         Collections.sort(values);
+        log.info("Compute binary split on attribute " + attribute + " with " + values.size() + " values");
         // initialize values
         int pass = 0;
         double purity = 0;

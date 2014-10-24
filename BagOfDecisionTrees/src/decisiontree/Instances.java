@@ -12,22 +12,24 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Instances implements Serializable {
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 3715065284920575165L;
-	private static final Log log = LogFactory.getLog(Instances.class);
+    private static final Log log = LogFactory.getLog(Instances.class);
     // attributes derived from instances
-    public Map<String, Attribute> attributes;
+    private Map<String, Attribute> attributes;
+    // classifiers derived from instances
+    private Map<String, MutableInt> classifiers;
+    // filtered list of attributes
+    private Set<String> filters;
     // instances for the set of data
     private transient List<Instance> instances;
     
@@ -35,7 +37,14 @@ public class Instances implements Serializable {
      * Default constructor for instances
      */
     public Instances(){
+        // instantiate list of instances
         instances = new LinkedList<Instance>();
+        // instantiate mapped attributes
+        attributes = new HashMap<String, Attribute>();
+        // instantiate mapped classifiers
+        classifiers = new HashMap<String, MutableInt>();
+        // reset attributes filter
+        filters = new HashSet<String>();
     }
     
     /**
@@ -49,9 +58,22 @@ public class Instances implements Serializable {
         // load file containing data set
         log.info("Instances constructor");
         loadDataset(f);
-        // map attributes from set of instances
-        log.info("Mapping attributes");
-        map();
+    }
+    
+    /**
+     * Constructor for instances given another set of instances and a
+     * filter attribute set
+     * @param master
+     * @param filters 
+     */
+    public Instances(Instances instances, Set<String> filters) {
+        this();
+        // set filter attributes
+        this.filters = filters;
+        // add all instances to this set
+        for(Instance instance: instances.instances()) {
+            add(instance);
+        }
     }
     
     /**
@@ -61,16 +83,7 @@ public class Instances implements Serializable {
      * @param classifier 
      */
     private void add(String[] names, String[] values, String classifier){
-        instances.add(new Instance(names, values, classifier));
-    }
-    
-    /**
-     * Add instance to the linked list
-     * @param instance 
-     */
-    public void add(Instance instance) {
-        // add instance
-        instances.add(instance);
+        add(new Instance(names, values, classifier));
     }
 
     /**
@@ -80,10 +93,75 @@ public class Instances implements Serializable {
     public void addAll(Instances instances) {
         // add all instances to this set
         for(Instance instance: instances.instances()) {
-            this.add(instance);
+            add(instance);
         }
-        // map attributes
-        map();
+    }
+    
+    /**
+     * Add instance to the linked list
+     * @param instance 
+     */
+    public void add(Instance instance) {
+        // add instance
+        instances.add(instance);
+        // update mapped attributes
+        mapAttributes(instance);
+        // update mapped classifiers
+        mapClassifiers(instance);
+    }
+    
+    /**
+     * Update attributes map and value counters
+     * @param instance 
+     */
+    private void mapAttributes(Instance instance) {
+        // for each attribute defined on this instance
+        for(String attribute: instance.attributes()) {
+            // map filtered attributes, or all if no filter defined
+            if(filtered(attribute)) {
+                // retrieve mapped attribute
+                Attribute mappedAttribute = attributes.get(attribute);
+                if(mappedAttribute == null) {
+                    // create mapping if none defined
+                    attributes.put(attribute, new Attribute(attribute, instance.value(attribute)));
+                } else {
+                    // add attribute value
+                    mappedAttribute.add(instance.value(attribute));
+                }
+            }
+        }
+    }
+    
+    /**
+     * Update classifier map and counter
+     * @param instance 
+     */
+    private void mapClassifiers(Instance instance) {
+        // retrieve mutable counter
+        MutableInt count = classifiers.get(instance.classifier());
+        if(count == null) {
+            // create new mutable counter if not mapped
+            classifiers.put(instance.classifier(), new MutableInt(1));
+        } else {
+            // increment mutable counter
+            count.increment();
+        }
+    }
+    
+    /**
+     * Getter to determine if an attribute is filtered for this instance set
+     * @param attribute
+     * @return true if the set is unfiltered or the attribute is defined in
+     * the filter, false otherwise
+     */
+    private boolean filtered(String attribute) {
+        if(filters == null || filters.isEmpty() || filters.contains(attribute)) {
+            // when no filter defined or filter contains attribute name
+            return true;
+        } else {
+            // when filter does not contain attribute name
+            return false;
+        }
     }
 
     /**
@@ -99,11 +177,7 @@ public class Instances implements Serializable {
      * @return 
      */
     public Set<String> attributes(){
-        Set<String> attributes = new LinkedHashSet<String>();
-        for(Instance instance: instances){
-            attributes.addAll(instance.attributes());
-        }
-        return attributes;
+        return attributes.keySet();
     }
     
     /**
@@ -113,11 +187,7 @@ public class Instances implements Serializable {
      * @return set of string values
      */
     public Set<String> values(String name){
-        Set<String> values = new LinkedHashSet<String>();
-        for(Instance instance: instances){
-            values.add(instance.value(name));
-        }
-        return values;
+        return attributes.get(name).values();
     }
     
     /**
@@ -163,11 +233,7 @@ public class Instances implements Serializable {
      * @return 
      */
     public Set<String> classifiers() {
-        Set<String> classifiers = new LinkedHashSet<String>();
-        for(Instance instance: instances){
-            classifiers.add(instance.classifier());
-        }
-        return classifiers;
+        return classifiers.keySet();
     }
     
     /**
@@ -175,20 +241,8 @@ public class Instances implements Serializable {
      * @param instances
      * @return map of classifiers and counts
      */
-    public Map<String, Integer> classifierCounts() {
-        // get the list of classifiers
-        Set<String> classifiers = classifiers();
-        // initialize counters for classifiers
-        Map<String, Integer> counts = new HashMap<String, Integer>();
-        for(String classifier: classifiers) {
-            counts.put(classifier, 0);
-        }
-        // count classifiers for all instances
-        for(Instance instance: instances()) {
-            String classifier = instance.classifier();
-            counts.put(classifier, counts.get(classifier) + 1);
-        }
-        return counts;
+    public Map<String, MutableInt> classifierCounts() {
+        return classifiers;
     }
     
     /**
@@ -198,13 +252,13 @@ public class Instances implements Serializable {
      */
     public String majorityClassifier() {
         // initialize counters for classifiers
-        Map<String, Integer> counts = classifierCounts();
+        Map<String, MutableInt> counts = classifierCounts();
         // initialize
-        int maxCount = 0;
+        MutableInt maxCount = new MutableInt(0);
         String maxClassifier = "";
         // compute majority count
         for(String classifier: counts.keySet()) {
-            if(counts.get(classifier) > maxCount) {
+            if(counts.get(classifier).compareTo(maxCount) > 0) {
                 maxCount = counts.get(classifier);
                 maxClassifier = classifier;
             }
@@ -218,25 +272,13 @@ public class Instances implements Serializable {
      * @param attribute
      * @return map of attribute names and their counts
      */
-    public Map<String, Integer> attributeValueCounts(String attribute) {
+    public Map<String, MutableInt> attributeValueCounts(String attribute) {
         // check if attribute name exists
         if(!attributes.containsKey(attribute)) {
             log.info("Unable to determine attribute counts, attribute " + attribute + " not found");
             return null;
         }
-        // get attribute values
-        Set<String> values = attributes.get(attribute).values();
-        // initialize counters for values
-        Map<String, Integer> counts = new HashMap<String, Integer>();
-        for(String value: values) {
-            counts.put(value, 0);
-        }
-        // count values for all instances
-        for(Instance instance: instances()) {
-            String value = instance.value(attribute);
-            counts.put(value, counts.get(value) + 1);
-        }
-        return counts;
+        return attributes.get(attribute).counts();
     }
     
     /**
@@ -252,13 +294,13 @@ public class Instances implements Serializable {
             return null;
         }
         // initialize counters for values
-        Map<String, Integer> counts = attributeValueCounts(attribute);
+        Map<String, MutableInt> counts = attributeValueCounts(attribute);
         // initialize
-        int maxCount = 0;
+        MutableInt maxCount = new MutableInt(0);
         String maxValue = "";
         // compute majority count
         for(String value: counts.keySet()) {
-            if(counts.get(value) > maxCount) {
+            if(counts.get(value).compareTo(maxCount) > 0) {
                 maxCount = counts.get(value);
                 maxValue = value;
             }
@@ -273,16 +315,16 @@ public class Instances implements Serializable {
      */
     public double classifierPurity() {
         // initialize counters for classifiers
-        Map<String, Integer> counts = classifierCounts();
+        Map<String, MutableInt> counts = classifierCounts();
         // initialize
-        int maxCount = 0;
+        MutableInt maxCount = new MutableInt(0);
         // compute majority count
         for(String classifier: counts.keySet()) {
-            if(counts.get(classifier) > maxCount) {
+            if(counts.get(classifier).compareTo(maxCount) > 0) {
                 maxCount = counts.get(classifier);
             }
         }
-        return ((double)maxCount / (double)size()) * 100;
+        return (maxCount.doubleValue() / (double)size()) * 100;
     }
     
     /**
@@ -307,10 +349,6 @@ public class Instances implements Serializable {
         for(Instance instance: instances) {
             split[group++].add(instance);
             if(group == k) group = 0;
-        }
-        // map attributes for each split
-        for(int i = 0; i < k; i++) {
-            split[i].map();
         }
         return split;
     }
@@ -339,10 +377,6 @@ public class Instances implements Serializable {
         // split instances using indexed attribute value
         for(Instance instance: instances) {
             split[indexed.indexOf(instance.value(attribute))].add(instance);
-        }
-        // map attributes for each split
-        for(int i = 0; i < values.size(); i++) {
-            split[i].map();
         }
         return split;
     }
@@ -376,10 +410,6 @@ public class Instances implements Serializable {
                 split[1].add(instance);
             }
         }
-        // map attributes for each split
-        for(int i = 0; i < k; i++) {
-            split[i].map();
-        }
         return split;
     }
 
@@ -394,8 +424,6 @@ public class Instances implements Serializable {
         for(int i = 0; i < instances.length; i++) {
             if(i != index) merged.addAll(instances[i]);
         }
-        // map attributes
-        merged.map();
         return merged;
     }
     
@@ -438,17 +466,6 @@ public class Instances implements Serializable {
             } catch (IOException e) {
                 System.out.println("IOException when closing file");
             }
-        }
-    }
-    
-    /**
-     * Map attributes from set of instances
-     */
-    public void map() {
-        int index = 0;
-        attributes = new HashMap<String, Attribute>();
-        for(String name: attributes()) {
-            attributes.put(name, new Attribute(name, values(name), index++));
         }
     }
 }
