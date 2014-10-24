@@ -1,38 +1,46 @@
 package decisiontree;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class Attribute implements Serializable {
-    private int index;
+    private static final Log log = LogFactory.getLog(Attribute.class);
     private String name;
-    private Set<String> values;
+    private Map<String, MutableInt> values;
+    
+    /**
+     * Constructor for attribute
+     * @param name
+     */
+    public Attribute(String name) {
+        this.name = name;
+        this.values = new HashMap<String, MutableInt>();
+    }
+    
+    /**
+     * Constructor for attribute and value
+     * @param name
+     * @param value 
+     */
+    public Attribute(String name, String value) {
+        this(name);
+        add(value);
+    }
 
     /**
-     * Constructor for attribute given name and set of values
+     * Constructor for attribute and set of values
      * @param name
      * @param values
      * @param classifier 
      */
-    public Attribute(String name, Set<String> values, int index){
-        this.name = name;
-        this.index = index;
-        this.values = values;
-    }
-    
-    /**
-     * Constructor for attribute given name but no values
-     * @param name
-     * @param index 
-     */
-    public Attribute(String name, int index) {
-        this.name = name;
-        this.index = index;
-        this.values = new HashSet<String>();
+    public Attribute(String name, Set<String> values){
+        this(name);
+        add(values);
     }
 
     /**
@@ -40,7 +48,9 @@ public class Attribute implements Serializable {
      * @param values 
      */
     public void add(Set<String> values){
-        this.values = values;
+        for(String value: values) {
+            add(value);
+        }
     }
     
     /**
@@ -48,7 +58,12 @@ public class Attribute implements Serializable {
      * @param value 
      */
     public void add(String value) {
-        values.add(value);
+        MutableInt count = values.get(value);
+        if(count == null) {
+            values.put(value, new MutableInt(1));
+        } else {
+            count.increment();
+        }
     }
 
     /**
@@ -57,14 +72,6 @@ public class Attribute implements Serializable {
      */
     public String name() {
         return name;
-    }
-
-    /**
-     * Getter for attribute index
-     * @return index of the attribute
-     */
-    public int index() {
-        return index;
     }
 
     /**
@@ -80,14 +87,14 @@ public class Attribute implements Serializable {
      * @return set of values
      */
     public Set<String> values() {
-        return values;
+        return values.keySet();
     }
-
+    
     /**
-     * Enumerate the values for the attribute
-     * @return enumeration of the values
+     * Getter for the map of values and counts
+     * @return 
      */
-    public Enumeration enumerate() {
-        return Collections.enumeration(values);
+    public Map<String, MutableInt> counts() {
+        return values;
     }
 }

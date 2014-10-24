@@ -1,10 +1,12 @@
 package decisiontree;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,43 +25,7 @@ public class TreeTrainer {
 		this.instances = instances;
 	}
 
-	/**
-	 * Get a random set of sub attributes
-	 * 
-	 * @param attributes
-	 *            String array of attribute names
-	 * @return
-	 */
-	protected String[] randomAttributeSplit(String[] attributes) {
-		int subCount = (int) Math.round(Math.sqrt(attributes.length));
-		ArrayList<String> list = new ArrayList<String>(
-				Arrays.asList(attributes));
-
-		Collections.shuffle(list);
-
-		return (String[]) list.subList(0, subCount).toArray(new String[0]);
-	}
-
-	/**
-	 * Get a random set of sub attributes
-	 * 
-	 * @param attributes
-	 *            Attribute collection
-	 * @return
-	 */
-	protected String[] randomAttributeSplit(Collection<Attribute> attributes) {
-		String[] vals = new String[attributes.size()];
-		int i = 0;
-
-		for (Attribute attr : attributes) {
-			vals[i] = attr.name();
-			i++;
-		}
-
-		return randomAttributeSplit(vals);
-	}
-
-	/**
+        /**
 	 * Split a collection of Instances into a new collection with a smaller set
 	 * of attributes that are picked at random
 	 * 
@@ -67,30 +33,16 @@ public class TreeTrainer {
 	 * @return
 	 */
 	protected Instances splitInstancesByAttributesRandomly(Instances instances) {
-		Instances subInstances = new Instances();
-		String[] subAttributes = randomAttributeSplit(instances.attributes
-				.values());
-
-		// Loop over all the instances in this collection and pick out the
-		// attributes
-		// that were randomly chosen
-		for (Instance instance : instances.instances()) {
-			String[] values = new String[subAttributes.length];
-
-			for (int i = 0; i < subAttributes.length; i++) {
-				// Check for discrete or continuous values
-				values[i] = Instance.isContinuous(subAttributes[i]) ? instance
-						.valueDouble(subAttributes[i]).toString() : instance
-						.value(subAttributes[i]);
-			}
-
-			subInstances.add(new Instance(subAttributes, values, instance
-					.classifier()));
-		}
-
-		subInstances.map();
-
-		return subInstances;
+            // retrieve list of attributes for this instance set
+            List<String> attributes = new ArrayList<String>(instances.attributes());
+            // shuffle the list of attributes
+            Collections.shuffle(attributes);
+            // compute a count for the filtered attribute set
+            int count = (int)Math.round(Math.sqrt(attributes.size()));
+            // get hashset of the filtered attributes set
+            Set<String> filters = new HashSet<String>(attributes.subList(0, count));
+            // retrieve set of instances with this attribute filter set
+            return new Instances(instances, filters);
 	}
 
 	/**

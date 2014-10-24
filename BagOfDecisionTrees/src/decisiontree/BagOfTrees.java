@@ -102,6 +102,14 @@ public class BagOfTrees {
 	public Id3 get(int index) {
 		return bagOfTrees.get(index);
 	}
+        
+        /**
+         * Returns the size of the bag of trees array
+         * @return size of the bag of trees array
+         */
+        public int count() {
+            return bagOfTrees.size();
+        }
 
 	/**
 	 * Vote on the most common classification for the given instance
@@ -142,6 +150,7 @@ public class BagOfTrees {
 	}
 
 	public static void main(String[] args) {
+            log.info("Starting BagOfTrees execution");
 		testBagOfTrees();
 
 	}
@@ -151,7 +160,7 @@ public class BagOfTrees {
 	 */
 	public static void testBagOfTrees() {
 
-		String PATH_TO_FILE = "data/kddcup.data_2_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
+		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
 		
 		log.info("Loading instances from file");
 
@@ -172,15 +181,17 @@ public class BagOfTrees {
 		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(10));
 		
 		// Serialize the bag to an out file
+                log.info("Serializing bag of trees to file");
 		bot.serializeBagToFile("data/test.txt");
 		
 		bot = null;
 		instances = null;
 		treeTrainer = null;
 		
-		
+		log.info("Deserializing bag of trees from file");
 		BagOfTrees botIn = new BagOfTrees();
 		botIn.readBagFromFile("data/test.txt");
+                log.info("Serialized file loaded " + botIn.count() + " trees");
 		
 		/*
 		// Create some test instances that we can try and classify

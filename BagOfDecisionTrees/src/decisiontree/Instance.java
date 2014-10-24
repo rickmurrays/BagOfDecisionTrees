@@ -8,7 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Instance implements Serializable {
-	private static final Log log = LogFactory.getLog(Instance.class);
+    private static final Log log = LogFactory.getLog(Instance.class);
     private Map<String, String> values;
     private Map<String, Double> valuesDouble;
     private String classifier;
@@ -45,6 +45,14 @@ public class Instance implements Serializable {
      */
     public Set<String> attributes(){
         return values.keySet();
+    }
+    
+    /**
+     * Getter method for mapped values
+     * @return mapped values
+     */
+    public Map<String, String> values() {
+        return values;
     }
     
     /**
