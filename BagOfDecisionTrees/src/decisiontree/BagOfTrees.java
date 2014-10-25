@@ -59,6 +59,26 @@ public class BagOfTrees {
 	public List<Id3> getTrees(){
 		return bagOfTrees;
 	}
+	
+	/**
+	 * Returns the Id3 tree at the specified position in the list
+	 * 
+	 * @param index
+	 *            position in the list
+	 * @return Id3 tree
+	 */
+	public Id3 get(int index) {
+		return bagOfTrees.get(index);
+	}
+
+	/**
+	 * Returns the size of the bag of trees array
+	 * 
+	 * @return size of the bag of trees array
+	 */
+	public int count() {
+		return bagOfTrees.size();
+	}
 
 	/**
 	 * Serialize to a file output the list of trees that are currently held in
@@ -108,26 +128,6 @@ public class BagOfTrees {
 	}
 
 	/**
-	 * Returns the Id3 tree at the specified position in the list
-	 * 
-	 * @param index
-	 *            position in the list
-	 * @return Id3 tree
-	 */
-	public Id3 get(int index) {
-		return bagOfTrees.get(index);
-	}
-
-	/**
-	 * Returns the size of the bag of trees array
-	 * 
-	 * @return size of the bag of trees array
-	 */
-	public int count() {
-		return bagOfTrees.size();
-	}
-
-	/**
 	 * Vote on the most common classification for the given instance
 	 * 
 	 * @param instance
@@ -163,6 +163,21 @@ public class BagOfTrees {
 		}
 
 		return mostPopularClassification;
+	}
+	
+	
+	/**
+	 * Return the number of incorrectly classified instances
+	 */
+	public int getOutOfBagErrorCount(List<Instance> instanceData){
+		int count = 0;
+		for(Instance instance: instanceData){
+			if(!instance.classifier().equals(classifyByVote(instance))){
+				count++;
+			}
+		}
+		
+		return count;
 	}
 
 	/*
