@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -42,6 +43,21 @@ public class BagOfTrees {
 	 */
 	public void addTrees(Id3[] trees) {
 		bagOfTrees.addAll(Arrays.asList(trees));
+	}
+	
+	/**
+	 * Add an array of trees to the collection
+	 */
+	public void addTrees(List<Id3> trees) {
+		bagOfTrees.addAll(trees);
+	}
+	
+	
+	/**
+	 * Return a List containing all Id3 trees
+	 */
+	public List<Id3> getTrees(){
+		return bagOfTrees;
 	}
 
 	/**
