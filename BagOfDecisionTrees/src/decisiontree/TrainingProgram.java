@@ -1,16 +1,13 @@
 package decisiontree;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -33,16 +30,29 @@ public class TrainingProgram {
 
 	}
 
+	/**
+	 * Get number of trees in bag
+	 */
 	public int getBagOfTreesSize() {
 		return bagOfTrees.count();
 	}
 
+	/**
+	 * Load data, randomize it, and train trees
+	 */
 	public void Run(String path_to_file) {
 		bagOfTrees = new BagOfTrees();
 
 		loadData(path_to_file);
 
 		trainTreesOnDataSplits();
+	}
+	
+	/**
+	 * Serialize bag of tree
+	 */
+	public void Save(String path_to_file){
+		bagOfTrees.serializeBagToFile(path_to_file);
 	}
 
 	/**
@@ -52,7 +62,7 @@ public class TrainingProgram {
 	private void trainTreesOnDataSplits() {
 		// Break up the raw training data into small pieces that trees will be
 		// trained from
-		int dataSplitFactor = 10;
+		int dataSplitFactor = 500;
 		int dataSplit = rawTrainingData.size() / dataSplitFactor;
 
 		for (int i = 0; i < dataSplitFactor; i++) {
@@ -78,10 +88,20 @@ public class TrainingProgram {
 
 			// Add to the bag the randomly trained trees
 			bagOfTrees.addTrees(trainTrees(instances, 10));
+			
+			//TODO: remove artificial break
+			if(i==0){
+				return;
+			}
 		}
-
 	}
 
+	/**
+	 * Train trees from random attributes
+	 * @param instances Instances to train the trees from
+	 * @param treeCount Number of trees to be trained
+	 * @return
+	 */
 	private Id3[] trainTrees(Instances instances, int treeCount) {
 		// Instantiate new TreeTrainer using the loaded instances
 		TreeTrainer treeTrainer = new TreeTrainer(instances);
@@ -132,6 +152,8 @@ public class TrainingProgram {
 				System.out.println("IOException when closing file");
 			}
 		}
+		
+		log.debug("Loaded " + rawTrainingData.size() + " records");
 
 		randomizeData();
 	}
@@ -147,24 +169,27 @@ public class TrainingProgram {
 		List<String> sub = rawTrainingData.subList(0, trainingSize);
 		rawTestingData = new ArrayList<String>(sub);
 		sub.clear();
-
+		
+		log.debug("Training data contains " + rawTrainingData.size() + " records");
+		log.debug("Testing data contains " + rawTestingData.size() + " records");
 	}
 
 	public static void main(String[] args) {
 		long t = System.currentTimeMillis();
 		
 		// testBagOfTrees();
-		String PATH_TO_FILE = "data/kddcup.data_xsm.txt";
+		String PATH_TO_FILE = "data/kddcup.data.txt"; //kddcup.data_10_percent.txt
+		String PATH_TO_SERIALIZED_BOT = "data/kddcup.trees";
 		TrainingProgram trainingProgram = new TrainingProgram();
 		trainingProgram.Run(PATH_TO_FILE);
+		trainingProgram.Save(PATH_TO_SERIALIZED_BOT);
 
 		int count = trainingProgram.getBagOfTreesSize();
-
-		System.out.println("Started at " + t);
 		
 		System.out.println("TreeBagCount: " + count);
 
 		System.out.println("Stopped at " + System.currentTimeMillis());
+		System.out.println("Runtime: " + (((System.currentTimeMillis()-t)/1000)/60) + "minutes");
 	}
 
 	/**
@@ -172,7 +197,7 @@ public class TrainingProgram {
 	 */
 	public static void testBagOfTrees() {
 
-		String PATH_TO_FILE = "data/kddcup.data_2_percent.txt"; // kddcup.data_xsm.txt
+		String PATH_TO_FILE = "data/kddcup.data.txt"; // kddcup.data_xsm.txt
 		// //iris.data
 		// //kddcup.data_2_percent.txt
 
