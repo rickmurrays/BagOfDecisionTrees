@@ -1,6 +1,5 @@
 package decisiontree;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -9,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,6 +43,41 @@ public class BagOfTrees {
 	 */
 	public void addTrees(Id3[] trees) {
 		bagOfTrees.addAll(Arrays.asList(trees));
+	}
+	
+	/**
+	 * Add an array of trees to the collection
+	 */
+	public void addTrees(List<Id3> trees) {
+		bagOfTrees.addAll(trees);
+	}
+	
+	
+	/**
+	 * Return a List containing all Id3 trees
+	 */
+	public List<Id3> getTrees(){
+		return bagOfTrees;
+	}
+	
+	/**
+	 * Returns the Id3 tree at the specified position in the list
+	 * 
+	 * @param index
+	 *            position in the list
+	 * @return Id3 tree
+	 */
+	public Id3 get(int index) {
+		return bagOfTrees.get(index);
+	}
+
+	/**
+	 * Returns the size of the bag of trees array
+	 * 
+	 * @return size of the bag of trees array
+	 */
+	public int count() {
+		return bagOfTrees.size();
 	}
 
 	/**
@@ -93,25 +128,6 @@ public class BagOfTrees {
 	}
 
 	/**
-	 * Returns the Id3 tree at the specified position in the list
-	 * 
-	 * @param index
-	 *            position in the list
-	 * @return Id3 tree
-	 */
-	public Id3 get(int index) {
-		return bagOfTrees.get(index);
-	}
-        
-        /**
-         * Returns the size of the bag of trees array
-         * @return size of the bag of trees array
-         */
-        public int count() {
-            return bagOfTrees.size();
-        }
-
-	/**
 	 * Vote on the most common classification for the given instance
 	 * 
 	 * @param instance
@@ -148,70 +164,79 @@ public class BagOfTrees {
 
 		return mostPopularClassification;
 	}
-
-	/*public static void main(String[] args) {
-            log.info("Starting BagOfTrees execution");
-		testBagOfTrees();
-
+	
+	
+	/**
+	 * Return the number of incorrectly classified instances
+	 */
+	public int getOutOfBagErrorCount(List<Instance> instanceData){
+		int count = 0;
+		for(Instance instance: instanceData){
+			if(!instance.classifier().equals(classifyByVote(instance))){
+				count++;
+			}
+		}
+		
+		return count;
 	}
 
-	//Quick test to make sure a tree can be serialized/de-serialized
-	public static void testBagOfTrees() {
-
-		String PATH_TO_FILE = "data/kddcup.data_2_percent.txt"; //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt 
-		
-		log.info("Loading instances from file");
-
-		// Load instances from file
-		Instances instances = new Instances(new File(PATH_TO_FILE));
-		
-		log.info("Instantiating a new tree trainer with the loaded instances");
-
-		// Instantiate new TreeTrainer using the loaded instances
-		TreeTrainer treeTrainer = new TreeTrainer(instances);
-
-		log.info("Instantiating new bag of trees");
-		// Instantiate new BagOfTrees
-		BagOfTrees bot = new BagOfTrees();
-		
-		log.info("Add 10 new randomly created trees to the bag");
-		// Add 10 trees trained on random attributes to the bag of trees
-		bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(1));
-		
-		// Serialize the bag to an out file
-                log.info("Serializing bag of trees to file");
-		bot.serializeBagToFile("data/test.txt");
-		
-		bot = null;
-		instances = null;
-		treeTrainer = null;
-		
-		log.info("Deserializing bag of trees from file");
-		BagOfTrees botIn = new BagOfTrees();
-		botIn.readBagFromFile("data/test.txt");
-                log.info("Serialized file loaded " + botIn.count() + " trees");
-		
-		
-		// Create some test instances that we can try and classify
-		String[] names = { "#sepal-length", "#sepal-width", "#petal-length",
-				"#petal-width" };
-
-		String[] valuesSersota = { "5.5", "4.2", "1.4", "0.2" };
-		String[] valuesVersicolor = { "5.7", "2.6", "3.5", "1.0" };
-
-		Instance instanceToClasify = new Instance(names, valuesSersota, null);// "Iris-setosa"
-		Instance instanceToClasify2 = new Instance(names, valuesVersicolor,
-				null); // "Iris-versicolor"
-
-		// Create a new bag of trees that will read in the previously serialized
-		// tree set
-		BagOfTrees botIn = new BagOfTrees();
-		botIn.readBagFromFile("data/test.txt");
-
-		// Pull out one of the trees from the bag and try to classify our test
-		// records
-		System.out.println(botIn.classifyByVote(instanceToClasify));
-		System.out.println(botIn.classifyByVote(instanceToClasify2));
-	}*/
+	/*
+	 * public static void main(String[] args) {
+	 * log.info("Starting BagOfTrees execution"); testBagOfTrees();
+	 * 
+	 * }
+	 * 
+	 * //Quick test to make sure a tree can be serialized/de-serialized public
+	 * static void testBagOfTrees() {
+	 * 
+	 * String PATH_TO_FILE = "data/kddcup.data_2_percent.txt";
+	 * //kddcup.data_xsm.txt //iris.data //kddcup.data_2_percent.txt
+	 * 
+	 * log.info("Loading instances from file");
+	 * 
+	 * // Load instances from file Instances instances = new Instances(new
+	 * File(PATH_TO_FILE));
+	 * 
+	 * log.info("Instantiating a new tree trainer with the loaded instances");
+	 * 
+	 * // Instantiate new TreeTrainer using the loaded instances TreeTrainer
+	 * treeTrainer = new TreeTrainer(instances);
+	 * 
+	 * log.info("Instantiating new bag of trees"); // Instantiate new BagOfTrees
+	 * BagOfTrees bot = new BagOfTrees();
+	 * 
+	 * log.info("Add 10 new randomly created trees to the bag"); // Add 10 trees
+	 * trained on random attributes to the bag of trees
+	 * bot.addTrees(treeTrainer.getTreesTrainedFromRandomAttributes(1));
+	 * 
+	 * // Serialize the bag to an out file
+	 * log.info("Serializing bag of trees to file");
+	 * bot.serializeBagToFile("data/test.txt");
+	 * 
+	 * bot = null; instances = null; treeTrainer = null;
+	 * 
+	 * log.info("Deserializing bag of trees from file"); BagOfTrees botIn = new
+	 * BagOfTrees(); botIn.readBagFromFile("data/test.txt");
+	 * log.info("Serialized file loaded " + botIn.count() + " trees");
+	 * 
+	 * 
+	 * // Create some test instances that we can try and classify String[] names
+	 * = { "#sepal-length", "#sepal-width", "#petal-length", "#petal-width" };
+	 * 
+	 * String[] valuesSersota = { "5.5", "4.2", "1.4", "0.2" }; String[]
+	 * valuesVersicolor = { "5.7", "2.6", "3.5", "1.0" };
+	 * 
+	 * Instance instanceToClasify = new Instance(names, valuesSersota, null);//
+	 * "Iris-setosa" Instance instanceToClasify2 = new Instance(names,
+	 * valuesVersicolor, null); // "Iris-versicolor"
+	 * 
+	 * // Create a new bag of trees that will read in the previously serialized
+	 * // tree set BagOfTrees botIn = new BagOfTrees();
+	 * botIn.readBagFromFile("data/test.txt");
+	 * 
+	 * // Pull out one of the trees from the bag and try to classify our test //
+	 * records System.out.println(botIn.classifyByVote(instanceToClasify));
+	 * System.out.println(botIn.classifyByVote(instanceToClasify2)); }
+	 */
 
 }

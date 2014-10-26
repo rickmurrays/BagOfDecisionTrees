@@ -25,7 +25,7 @@ public class TreeTrainer {
 		this.instances = instances;
 	}
 
-        /**
+	/**
 	 * Split a collection of Instances into a new collection with a smaller set
 	 * of attributes that are picked at random
 	 * 
@@ -33,20 +33,20 @@ public class TreeTrainer {
 	 * @return
 	 */
 	protected Instances splitInstancesByAttributesRandomly(Instances instances) {
-            // retrieve list of attributes for this instance set
-            List<String> attributes = new ArrayList<String>(instances.attributes());
-            // shuffle the list of attributes
-            Collections.shuffle(attributes);
-            // compute a count for the filtered attribute set
-            int count = (int)Math.round(Math.sqrt(attributes.size()));
-            // get hashset of the filtered attributes set
-            Set<String> filters = new HashSet<String>(attributes.subList(0, count));
-            // retrieve set of instances with this attribute filter set
-            return new Instances(instances, filters);
+		// retrieve list of attributes for this instance set
+		List<String> attributes = new ArrayList<String>(instances.attributes());
+		// shuffle the list of attributes
+		Collections.shuffle(attributes);
+		// compute a count for the filtered attribute set
+		int count = (int) Math.round(Math.sqrt(attributes.size()));
+		// get hashset of the filtered attributes set
+		Set<String> filters = new HashSet<String>(attributes.subList(0, count));
+		// retrieve set of instances with this attribute filter set
+		return new Instances(instances, filters);
 	}
 
 	/**
-	 * Create a new tree from a random set of attributes
+	 * Create new trees from a random set of attributes
 	 * 
 	 * @param count
 	 *            Number of trees to return
@@ -62,9 +62,21 @@ public class TreeTrainer {
 			trees[i] = new Id3(randomInstances);
 			trees[i].traverse();
 			// Try and clean up the tree of the instance data that it contains
-			trees[i].dropInstances();
+			// trees[i].dropInstances();
 		}
 
 		return trees;
+	}
+
+	/**
+	 * Create a new tree from a random set of attributes
+	 */
+	public Id3 getTreeTrainedFromRandomAttributes() {
+		Instances randomInstances = splitInstancesByAttributesRandomly(this.instances);
+		Id3 tree = new Id3(randomInstances);
+		tree.traverse();
+		
+		tree.dropInstances();
+		return tree;
 	}
 }
