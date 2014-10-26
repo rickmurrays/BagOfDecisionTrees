@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -67,28 +68,90 @@ public class TrainingProgram {
 	private void trainTreesOnDataSplits() {
 		// Break up the raw training data into small pieces that trees will be
 		// trained from
+		int dataForTraining = rawTrainingData.size()
+				- (rawTrainingData.size() / 66);
+		int dataForTesting = rawTrainingData.size() - dataForTraining;
 		int dataSplitFactor = 100;
-		int dataSplit = rawTrainingData.size() / dataSplitFactor;
+		int dataSplit = dataForTraining / dataSplitFactor;
 
 		for (int i = 0; i < dataSplitFactor; i++) {
-			if ((i % 10) == 0) {
+			if ((i % 5) == 0) {
 				log.info("Creating trees for data split " + i);
 			}
 			int fromItem = i * dataSplit;
 			// In case of odd numbers, make sure we catch the last record
-			int toItem = (i == dataSplitFactor - 1) ? rawTrainingData.size()
+			int toItem = (i == dataSplitFactor - 1) ? dataForTraining
 					: fromItem + dataSplit;
 
 			List<Instance> tempInstances = parseStringToInstance(rawTrainingData
 					.subList(fromItem, toItem));
 
-			// Train trees
-			trainTrees(tempInstances, 10);
+			// Train trees for this sub-split of data
+			trainTrees(tempInstances, 5);
 
-			// TODO: remove artificial break
-			// if (i == 10) {
-			// return;
-			// }
+			// TODO: temporary stop while testing...
+			//if (i == 2)
+			//	break;
+		}
+
+		// Print confusion matrix for the data set aside for testing
+		generateConfussionMatrix(parseStringToInstance(rawTrainingData.subList(
+				dataForTesting, rawTrainingData.size())));
+	}
+
+	/**
+	 * Generate a confusion matrix from the list of Instance(s)
+	 */
+	private void generateConfussionMatrix(List<Instance> instanceList) {
+		log.debug("Generating confussion matrix");
+
+		// Map of instance classifications and their respective guessed
+		// classifications
+		HashMap<String, HashMap<String, Integer>> confusionMatrix = new HashMap<String, HashMap<String, Integer>>();
+
+		for (Instance instance : instanceList) {
+			String guess = bagOfTrees.classifyByVote(instance);
+			String classifier = instance.classifier();
+
+			// Check that the guess and classification read in is not empty
+			if (!guess.equals("") || !instance.classifier().equals("")) {
+
+				// Add classification if not currently in the collection
+				if (!confusionMatrix.containsKey(classifier)) {
+					confusionMatrix.put(classifier,
+							new HashMap<String, Integer>());
+				}
+
+				// Add guessed classification if not currently in the collection
+				if (!confusionMatrix.get(classifier).containsKey(guess)) {
+					confusionMatrix.get(classifier).put(guess, 0);
+				}
+
+				// Increase the count of the guessed classification
+				confusionMatrix.get(classifier).put(guess,
+						confusionMatrix.get(classifier).get(guess) + 1);
+			}
+		}
+
+		System.out.format("%18s", "");
+		// Print the confusion matrix headers
+		for (String classification : confusionMatrix.keySet()) {
+			System.out.format(" %16s|", classification);
+		}
+		System.out.print("\n");
+
+		// Print the confusion matrix values
+		for (String classification : confusionMatrix.keySet()) {
+			System.out.format("%16s |", classification);
+			// Walk over all the possible classifications and show the guessed
+			// value if a guess was made
+			for (String s : confusionMatrix.keySet()) {
+				String value = (confusionMatrix.get(classification)
+						.containsKey(s)) ? confusionMatrix.get(classification)
+						.get(s).toString() : "";
+				System.out.format(" %15s |", value);
+			}
+			System.out.print("\n");
 		}
 	}
 
@@ -117,7 +180,7 @@ public class TrainingProgram {
 
 		for (int i = 0; i < treeCount; i++) {
 			// Take 66% of the instances at random and train a tree from them
-			int trainingSize = instanceList.size() / 66;
+			int trainingSize = instanceList.size() - (instanceList.size() / 66);
 			Instances instances = new Instances(instanceList.subList(0,
 					trainingSize - 1));
 
@@ -148,7 +211,6 @@ public class TrainingProgram {
 			}
 			totalClassifications++;
 		}
-
 	}
 
 	/**
@@ -206,19 +268,17 @@ public class TrainingProgram {
 	public void randomizeData() {
 		Collections.shuffle(rawTrainingData);
 
-		log.debug("Training data contains " + rawTrainingData.size()
-				+ " records");
+		log.debug("Randomized training data.");
 	}
 
 	public static void main(String[] args) {
 		long t = System.currentTimeMillis();
 
 		// testBagOfTrees();
-		String PATH_TO_FILE = "data/kddcup.data_10_percent.txt"; // kddcup.data_10_percent.txt
+		String PATH_TO_FILE = "data/kddcup.data_2_percent.txt"; // kddcup.data_10_percent.txt
 		String PATH_TO_SERIALIZED_BOT = "data/kddcup.trees";
 		TrainingProgram trainingProgram = new TrainingProgram();
 		trainingProgram.Run(PATH_TO_FILE);
-		trainingProgram.Save(PATH_TO_SERIALIZED_BOT);
 
 		int count = trainingProgram.getBagOfTreesSize();
 
@@ -227,8 +287,13 @@ public class TrainingProgram {
 				+ trainingProgram.totalMisClassifications + " / "
 				+ trainingProgram.totalClassifications);
 
-		System.out.println("Runtime: "
-				+ (((System.currentTimeMillis() - t) / 1000) / 60) + "minutes");
+		System.out.println("Saving forest to file...");
+		trainingProgram.Save(PATH_TO_SERIALIZED_BOT);
+
+		System.out
+				.println("Runtime: "
+						+ (((System.currentTimeMillis() - t) / 1000) / 60)
+						+ " minutes");
 	}
 
 	/**

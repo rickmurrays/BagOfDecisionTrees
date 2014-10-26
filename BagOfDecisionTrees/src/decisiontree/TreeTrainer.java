@@ -75,6 +75,8 @@ public class TreeTrainer {
 		Instances randomInstances = splitInstancesByAttributesRandomly(this.instances);
 		Id3 tree = new Id3(randomInstances);
 		tree.traverse();
+		
+		tree.dropInstances();
 		return tree;
 	}
 }
