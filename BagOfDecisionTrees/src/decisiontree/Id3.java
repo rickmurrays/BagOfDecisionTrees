@@ -270,12 +270,21 @@ public class Id3 implements Serializable {
 	 */
 	public String classify(Id3Node node, Instance instance) {
 		// return node classification if defined
-		if (node.classifier() != null)
+		if (node.classifier() != null) {
 			return node.classifier();
+		}
+		
+		if(node.attribute() == null){
+			log.error("Left and Right nodes are null, can not classify instance: "
+					+ instance.toString());
+			return "";
+		}
+		
 		// determine if the attribute on this node is continuous
 		if (node.isContinuous()) {
-			if(node.left() == null && node.right() == null){
-				log.error("Left and Right nodes are null, can not classify instance: " + instance.toString());
+			if (node.left() == null && node.right() == null) {
+				log.error("Left and Right nodes are null, can not classify instance: "
+						+ instance.toString());
 				return "";
 			}
 			// traverse binary child nodes to get classification
