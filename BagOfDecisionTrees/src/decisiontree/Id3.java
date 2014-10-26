@@ -20,7 +20,7 @@ public class Id3 implements Serializable {
 	private static double log2 = Math.log(2);
 
 	private Instances testInstances;
-	private List<Instance> testInstance;
+	private transient List<Instance> testInstance;
 	private List<String> predicted;
 	private Instances instances;
 	private double accuracy;
@@ -575,10 +575,10 @@ public class Id3 implements Serializable {
 	}
 
 	public void dropInstances() {
-		this.instances = null;
+		//this.instances = null;
 		this.testInstance = null;
 		this.testInstances = null;
-		removeAllInstances();
+		//removeAllInstances();
 	}
 
 	public void removeAllInstances() {
